@@ -6,13 +6,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import apoSkunkman.ai.ApoSkunkmanAIConstants;
-import apoSkunkman.ai.ApoSkunkmanAIEnemy;
 import apoSkunkman.ai.ApoSkunkmanAILevel;
 import apoSkunkman.ai.ApoSkunkmanAILevelSkunkman;
 import apoSkunkman.ai.ApoSkunkmanAIPlayer;
 
 
-public class SkunkWatcher {
+public class SkunkWatcher implements IWatcher {
 	ArrayList<APoint> skunklist;
 	AStern pathprovider;
 	
@@ -43,8 +42,8 @@ public class SkunkWatcher {
 		
 		int maxskunkwidth=0;
 		
-		for (int x=0;x<=12;x++){
-			for (int y=0;y<=12;y++){
+		for (int x=1;x<=13;x++){
+			for (int y=1;y<=13;y++){
 				if (level.getLevelAsByte()[y][x]==ApoSkunkmanAIConstants.LEVEL_SKUNKMAN){
 					ApoSkunkmanAILevelSkunkman skunk=level.getSkunkman(y, x);
 					if (skunk.getTimeToExplosion()>player.getMSForOneTile() && ((main.GetPathList().GetPoint(main.GetPathList().PathPosition()).equals(new APoint(x,y))) || (main.GetCurrentPosition(player).equals(new APoint(x,y))))){
@@ -103,13 +102,18 @@ public class SkunkWatcher {
 			}
 		}
 		if (skunkarea.isEmpty()==false){
+			System.out.println("Skunk found: "+skunklist.get(skunklist.size()-1).toString());
 			pathprovider=new AStern(level,player);
+			if (main.DontMove()){
+				main.GetPathList().ClearList();
+				main.SetWaiting(false);
+			}
 			main.GetPathList().InsertPoints(ASternSkunk(level,new APoint(player.getPlayerX(),player.getPlayerY(),0),skunkarea,maxskunkwidth));
 		}
 		
 		if (skunklist.isEmpty()){
 			if (main.DontMove()==true){
-				main.SetMovement(false);
+				main.SetWaiting(false);
 			}			
 		}
 	}
@@ -117,29 +121,19 @@ public class SkunkWatcher {
 	private ArrayList<APoint> ASternSkunk(ApoSkunkmanAILevel level,APoint current,ArrayList<APoint> affected,int skunkwidth)
 	{
 		ArrayList<APoint> list=new ArrayList<APoint>();
-		//List of best Point
-		ArrayList<APoint> possible= new ArrayList<APoint>();
-		int suchumfeld=0;
-		while (possible.size()==0){
-			suchumfeld+=1;
-			for (int x=(suchumfeld)*-1;x<=suchumfeld;x++){
-				for (int y=(suchumfeld)*-1;y<=suchumfeld;y++){
+			for (int x=(skunkwidth+2)*-1;x<=skunkwidth+2;x++){
+				for (int y=(skunkwidth+2)*-1;y<=skunkwidth+2;y++){
 					try{
-						if (level.getLevelAsByte()[current.Gety()+y][current.Getx()+x]==ApoSkunkmanAIConstants.LEVEL_FREE && affected.contains(new APoint(current.Getx()+x,current.Gety()+y))==false){
-							//possible.add(new APoint(current.Getx()+x,current.Gety()+y,0));
+						if (level.getLevelAsByte()[Math.max(current.Gety()+y, 0)][Math.max(current.Getx()+x, 0)]==ApoSkunkmanAIConstants.LEVEL_FREE && affected.contains(new APoint(current.Getx()+x,current.Gety()+y))==false){
 							APoint possiblepoint=(new APoint(current.Getx()+x,current.Gety()+y,0));
 							ArrayList<APoint> temp= new ArrayList<APoint>();
 							temp=pathprovider.FindPath(current, possiblepoint, false);
 							Collections.reverse(temp);
 							temp.remove(0);
-							if (temp.size()<=(skunkwidth+2)*2)
+							if (temp.size()<=list.size()||list.isEmpty())
 							{
 								list.clear();
 								list.addAll(temp);
-								//list.add(0,possiblepoint);
-								possible.add(new APoint(0,0,0));//Nur zum Abbruch der Schleife
-								y=suchumfeld;
-								x=suchumfeld;
 							}
 						}
 					}catch(Exception e){
@@ -147,7 +141,6 @@ public class SkunkWatcher {
 					}
 				}
 			}
-		}
 		
 		if (list.size()>0){
 			ArrayList<APoint> output=new ArrayList<APoint>();

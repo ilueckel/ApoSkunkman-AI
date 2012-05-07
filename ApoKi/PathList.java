@@ -31,7 +31,7 @@ public class PathList {
 	}
 	
 	public void InsertPoint(APoint point){
-		pathpointlist.add(pathposition, point);
+		pathpointlist.add(pathposition,point);
 	}
 	
 	public void AddPoints(ArrayList<APoint> points){
@@ -40,6 +40,11 @@ public class PathList {
 	
 	public void InsertPoints(ArrayList<APoint> points){
 		pathpointlist.addAll(pathposition,points);
+	}
+	
+	public void ClearList(){
+		pathpointlist=new ArrayList<APoint>();
+		pathposition=0;
 	}
 	
 	public int PathPosition(){
@@ -67,13 +72,19 @@ public class PathList {
 	}
 	
 	public APoint GetPoint(int index){
-		return pathpointlist.get(index);
+		if (index<pathpointlist.size())
+		{
+			return pathpointlist.get(index);
+		}else{
+			return APoint.errorPoint();
+		}
+		
 	}
 	
 	public APoint GetActualPoint(){
 		if (pathposition-1>0){
 			return pathpointlist.get(pathposition-1);
-		}else{
+		}else{		
 			return APoint.errorPoint();
 		}
 	}
@@ -88,5 +99,28 @@ public class PathList {
 	
 	public void ReverseList(){
 		Collections.reverse(pathpointlist);
+	}
+	
+	/*
+	 * Returns true, if the given Point is not more than 5 Tiles away from the last Point in the list
+	 */
+	public boolean IsTargetNearPoint(APoint target){
+		if (pathpointlist.size()>0)
+		{
+			APoint last=pathpointlist.get(pathpointlist.size()-1);
+			int difx=Math.abs(last.Getx()-target.Getx());
+			int dify=Math.abs(last.Gety()-target.Gety());
+			if (difx <=5 && dify<=5)
+				return true;
+		}
+		return false;
+	}
+	
+	public void SetPositionOneBack(){
+		pathposition=Math.max(0, pathposition-1);
+	}
+	
+	public boolean Contains(APoint point){
+		return pathpointlist.contains(point);
 	}
 }

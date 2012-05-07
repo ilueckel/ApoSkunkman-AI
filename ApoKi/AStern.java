@@ -14,6 +14,8 @@ import apoSkunkman.ai.ApoSkunkmanAIPlayer;
 public class AStern {
 	ApoSkunkmanAILevel level;
 	ApoSkunkmanAIPlayer player;
+	StopWatch stopwatch=new StopWatch();
+	
 	public AStern(ApoSkunkmanAILevel _level, ApoSkunkmanAIPlayer _player)
 	{
 		setProperties(_level,_player);
@@ -33,6 +35,7 @@ public class AStern {
 		APoint target=new APoint(level.getGoalXPoint().x,level.getGoalXPoint().y);
 		ASternPath(level,pp,target,list);
 		//list.remove(0);
+		stopwatch=new StopWatch();
 		return list;
 	}
 	
@@ -43,6 +46,7 @@ public class AStern {
 		ArrayList<APoint> list=new ArrayList<APoint>();
 		ASternPath(level,start,target,list);
 		//list.remove(0);
+		stopwatch=new StopWatch();
 		return list;
 	}
 	
@@ -51,17 +55,26 @@ public class AStern {
 	 */
 	public ArrayList<APoint> FindPath(APoint start, APoint target, boolean throughbushes){
 		ArrayList<APoint> list=new ArrayList<APoint>();
-		ASternPath(level,new ArrayList<APoint>(),start,target,list,throughbushes);
+		ASternPath(level,new ArrayList<APoint>(),start,target,list,throughbushes,0);
 		//Collections.reverse(list);
 		//list.remove(0);
+		stopwatch=new StopWatch();
 		return list;
 	}
 	
 	private boolean ASternPath(ApoSkunkmanAILevel level, APoint start, APoint target, ArrayList<APoint> list){
-		return ASternPath(level,new ArrayList<APoint>(),start,target,list,true);
+		return ASternPath(level,new ArrayList<APoint>(),start,target,list,true,0);
 	}
 	
-	private boolean ASternPath(ApoSkunkmanAILevel level,ArrayList<APoint> previouspoints, APoint point, APoint target, ArrayList<APoint> list, boolean movethroughbush){
+	private boolean ASternPath(ApoSkunkmanAILevel level,ArrayList<APoint> previouspoints, APoint point, APoint target, ArrayList<APoint> list, boolean movethroughbush,int n){
+		if (stopwatch.getElapsedTime()>200){
+			stopwatch.stop();
+			return false;
+			
+		}
+		if (stopwatch.isRunning()==false)
+			stopwatch.start();
+		
 		if (target.Getx()==point.Getx() && point.Gety()==target.Gety()){
 			list.addAll(previouspoints);
 			list.add(target);
@@ -82,14 +95,13 @@ public class AStern {
 					APoint temp=new APoint(nx,ny,F);
 					pointlist.add(temp);
 				}
-				if(above==ApoSkunkmanAIConstants.LEVEL_FREE||above==ApoSkunkmanAIConstants.LEVEL_GOODIE){
+				if(above==ApoSkunkmanAIConstants.LEVEL_FREE||above==ApoSkunkmanAIConstants.LEVEL_GOODIE||above==ApoSkunkmanAIConstants.LEVEL_SKUNKMAN){
 					int F=(int) ((Math.round(Math.sqrt(Math.pow(nx-target.Getx(), 2)+Math.pow(ny-target.Gety(), 2))))) ;
 					APoint temp=new APoint(nx,ny,F);
 					pointlist.add(temp);
 				}
 			}
 		}catch (Exception e){
-			
 		}
 		
 		
@@ -104,7 +116,7 @@ public class AStern {
 					APoint temp=new APoint(nx,ny,F);
 					pointlist.add(temp);
 				}
-				if(left==ApoSkunkmanAIConstants.LEVEL_FREE||left==ApoSkunkmanAIConstants.LEVEL_GOODIE){
+				if(left==ApoSkunkmanAIConstants.LEVEL_FREE||left==ApoSkunkmanAIConstants.LEVEL_GOODIE||left==ApoSkunkmanAIConstants.LEVEL_SKUNKMAN){
 					int F=(int) ((Math.round(Math.sqrt(Math.pow(nx-target.Getx(), 2)+Math.pow(ny-target.Gety(), 2))))) ;
 					APoint temp=new APoint(nx,ny,F);
 					pointlist.add(temp);
@@ -124,7 +136,7 @@ public class AStern {
 					APoint temp=new APoint(nx,ny,F);
 					pointlist.add(temp);
 				}
-				if(right==ApoSkunkmanAIConstants.LEVEL_FREE||right==ApoSkunkmanAIConstants.LEVEL_GOODIE){
+				if(right==ApoSkunkmanAIConstants.LEVEL_FREE||right==ApoSkunkmanAIConstants.LEVEL_GOODIE||right==ApoSkunkmanAIConstants.LEVEL_SKUNKMAN){
 					int F=(int) ((Math.round(Math.sqrt(Math.pow(nx-target.Getx(), 2)+Math.pow(ny-target.Gety(), 2))))) ;
 					APoint temp=new APoint(nx,ny,F);
 					pointlist.add(temp);
@@ -144,7 +156,7 @@ public class AStern {
 					APoint temp=new APoint(nx,ny,F);
 					pointlist.add(temp);
 				}
-				if(bottom==ApoSkunkmanAIConstants.LEVEL_FREE||bottom==ApoSkunkmanAIConstants.LEVEL_GOODIE){
+				if(bottom==ApoSkunkmanAIConstants.LEVEL_FREE||bottom==ApoSkunkmanAIConstants.LEVEL_GOODIE||bottom==ApoSkunkmanAIConstants.LEVEL_SKUNKMAN){
 					int F=(int) ((Math.round(Math.sqrt(Math.pow(nx-target.Getx(), 2)+Math.pow(ny-target.Gety(), 2))))) ;
 					APoint temp=new APoint(nx,ny,F);
 					pointlist.add(temp);
@@ -155,15 +167,22 @@ public class AStern {
 		}
 		
 		try{
-			Collections.sort(pointlist);
-			for (APoint temp:pointlist){
-				previouspoints.add(temp);
-				if (ASternPath(level,previouspoints,temp,target,list,movethroughbush)==true){
-					return true;
-				}else{
-					previouspoints.remove(temp);
+			
+			//if (n<100){
+				Collections.sort(pointlist);
+				while(pointlist.size()>2)
+					pointlist.remove(2);
+				int i=0;
+				for (APoint temp:pointlist){
+					previouspoints.add(temp);
+					i+=1;
+					if (ASternPath(level,previouspoints,temp,target,list,movethroughbush,n+i)==true){
+						return true;
+					}else{
+						previouspoints.remove(temp);
+					}
 				}
-			}
+			//}
 		}catch (Exception e){
 			return false;
 		}
